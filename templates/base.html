@@ -1,0 +1,41 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema de Produtos{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="profile">
+                <div class="avatar">
+                    <img src="{% static 'img/avatar.png' %}" alt="Avatar">
+                </div>
+                <div class="user-info">
+                    <h3>{{ request.user.username }}</h3>
+                </div>
+            </div>
+            <nav class="menu">
+                <a href="{% url 'relatorios' %}" class="menu-item">Relatórios</a>
+                <a href="{% url 'lista_produtos' %}" class="menu-item">Produtos</a>
+                <a href="{% url 'lista_categorias' %}" class="menu-item">Categorias</a>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="menu-item">Logout</button>
+                </form>
+            </nav>
+        </div>
+        <div class="content">
+            <header>
+                <h1>{% block header %}{% endblock %}</h1>
+            </header>
+            <main>
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+</body>
+</html>
