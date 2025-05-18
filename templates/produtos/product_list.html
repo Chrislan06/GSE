@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Produtos{% endblock %}
+
+{% block header %}Lista de Produtos{% endblock %}
+
+{% block content %}
+<div class="actions">
+    <a href="{% url 'novo_produto' %}" class="btn btn-primary">Novo Produto</a>
+</div>
+
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Descrição</th>
+                <th>Preço</th>
+                <th>Estoque</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td>{{ product.name }}</td>
+                <td>{{ product.description|truncatechars:50 }}</td>
+                <td>R$ {{ product.price }}</td>
+                <td>{{ product.stock }}</td>
+                <td class="actions">
+                    <a href="{% url 'editar_produto' product.id %}" class="btn btn-small">Editar</a>
+                    <a href="{% url 'excluir_produto' product.id %}" class="btn btn-small btn-danger">Excluir</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">Nenhum produto cadastrado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Categorias{% endblock %}
+
+{% block header %}Lista de Categorias{% endblock %}
+
+{% block content %}
+<div class="actions">
+    <a href="{% url 'nova_categoria' %}" class="btn btn-primary">Nova Categoria</a>
+</div>
+
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Descrição</th>
+                <th>Produtos</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category in categories %}
+            <tr>
+                <td>{{ category.name }}</td>
+                <td>{{ category.description|truncatechars:50 }}</td>
+                <td>{{ category.products.count }}</td>
+                <td class="actions">
+                    <a href="{% url 'editar_categoria' category.id %}" class="btn btn-small">Editar</a>
+                    <a href="{% url 'excluir_categoria' category.id %}" class="btn btn-small btn-danger">Excluir</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">Nenhuma categoria cadastrada.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

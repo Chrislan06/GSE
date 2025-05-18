@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Excluir Categoria{% endblock %}
+
+{% block header %}Excluir Categoria{% endblock %}
+
+{% block content %}
+<div class="confirm-delete">
+    <h2>Tem certeza que deseja excluir a categoria "{{ category.name }}"?</h2>
+    
+    {% if category.products.count > 0 %}
+    <div class="warning-message">
+        <p>Atenção: Esta categoria possui {{ category.products.count }} produto(s) associado(s). Excluir esta categoria também excluirá todos os produtos relacionados.</p>
+    </div>
+    {% endif %}
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-danger">Sim, excluir</button>
+            <a href="{% url 'lista_categorias' %}" class="btn">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
