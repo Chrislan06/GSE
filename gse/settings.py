@@ -121,7 +121,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 # STATIC_FILES_DIRS = [os.path.join(BASE_DIR, 'templates/static')]
 
 # Default primary key field type
@@ -132,5 +133,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Login Redirection 
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'listar_produtos'
+LOGIN_REDIRECT_URL = 'lista_produtos'
 LOGOUT_REDIRECT_URL = 'login'
