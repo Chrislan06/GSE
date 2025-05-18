@@ -1,33 +1,36 @@
-<!-- templates/registration/login.html -->
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <style>
-        body { font-family: Arial; background: #f3f3f3; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        .box { background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 0 10px #ccc; width: 300px; }
-        input[type=text], input[type=password] { width: 100%; padding: 10px; margin-top: 8px; margin-bottom: 16px; border: 1px solid #ccc; border-radius: 5px; }
-        input[type=submit] { background: #007bff; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; width: 100%; }
-        input[type=submit]:hover { background: #0056b3; }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 </head>
 <body>
-    <div class="box">
-        <h2>Login</h2>
-        {% if form.errors %}
-            <p style="color: red;">Usuário ou senha inválidos. Tente novamente.</p>
-        {% endif %}
-        <form method="post">
-            {% csrf_token %}
-            <label for="id_username">Usuário:</label>
-            {{ form.username }}
-
-            <label for="id_password">Senha:</label>
-            {{ form.password }}
-
-            <input type="submit" value="Entrar">
-        </form>
+    <div class="login-container">
+        <div class="login-box">
+            <h2>Login</h2>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="id_username">Usuário:</label>
+                    <input type="text" name="username" id="id_username" required>
+                </div>
+                <div class="form-group">
+                    <label for="id_password">Senha:</label>
+                    <input type="password" name="password" id="id_password" required>
+                </div>
+                {% if form.errors %}
+                <div class="error-message">
+                    <p>Usuário ou senha incorretos. Tente novamente.</p>
+                </div>
+                {% endif %}
+                <div class="form-group">
+                    <button type="submit">Entrar</button>
+                </div>
+            </form>
+        </div>
     </div>
 </body>
 </html>
