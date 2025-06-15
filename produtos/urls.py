@@ -1,18 +1,29 @@
 from django.urls import path
 from . import views
+
+app_name = 'produtos'
+
 urlpatterns = [
-    # Produtos
+    # URLs de Produtos
     path('', views.product_list, name='lista_produtos'),
-    path('produtos/novo/', views.product_create, name='novo_produto'),
-    path('produtos/editar/<int:pk>/', views.product_update, name='editar_produto'),
-    path('produtos/excluir/<int:pk>/', views.product_delete, name='excluir_produto'),
-
-    # Categorias
+    path('produto/novo/', views.product_create, name='criar_produto'),
+    path('produto/<int:pk>/', views.product_detail, name='detalhe_produto'),
+    path('produto/<int:pk>/editar/', views.product_update, name='editar_produto'),
+    path('produto/<int:pk>/excluir/', views.product_delete, name='excluir_produto'),
+    
+    # URLs de Categorias
     path('categorias/', views.category_list, name='lista_categorias'),
-    path('categorias/novo/', views.category_create, name='nova_categoria'),
-    path('categorias/editar/<int:pk>/', views.category_update, name='editar_categoria'),
-    path('categorias/excluir/<int:pk>/', views.category_delete, name='excluir_categoria'),
-
-    # Relatorios
-    path('produtos/relatorios/', views.reports, name='relatorios'),
+    path('categoria/nova/', views.category_create, name='criar_categoria'),
+    path('categoria/<int:pk>/editar/', views.category_update, name='editar_categoria'),
+    path('categoria/<int:pk>/excluir/', views.category_delete, name='excluir_categoria'),
+    
+    # URLs de Estoque
+    path('produto/<int:pk>/estoque/', views.stock_movement, name='movimentacao_estoque'),
+    
+    # URLs de Relatórios
+    path('relatorios/', views.reports, name='relatorios'),
+    path('alertas-estoque/', views.low_stock_alert, name='alertas_estoque'),
+    
+    # URLs AJAX
+    path('api/produto/<int:pk>/', views.get_product_data, name='api_produto'),
 ]
