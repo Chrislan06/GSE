@@ -182,7 +182,7 @@ class ProductService:
             List[Product]: Lista de produtos com estoque baixo
         """
         try:
-            return [product for product in Product.objects.all() if product.low_stock]
+            return [product for product in Product.objects.all() if product.low_stock and product.stock > 0]
         except Exception as e:
             logger.error(f"Erro ao buscar produtos com estoque baixo: {e}")
             return []

@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-oa#a^*dyczjc7^g*4r&=&!1z1nlv$u#kxlkgw0n4x*#rz-&0=^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
 # Application definition
 
@@ -133,5 +133,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Login Redirection 
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'lista_produtos'
+LOGIN_REDIRECT_URL = 'produtos:lista_produtos'
 LOGOUT_REDIRECT_URL = 'login'

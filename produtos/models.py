@@ -25,6 +25,18 @@ class Category(models.Model):
         if Category.objects.filter(name__iexact=self.name.strip()).exclude(pk=self.pk).exists():
             raise ValidationError('Já existe uma categoria com este nome.')
 
+    def get_low_stock_count(self) -> int:
+        """Retorna o número de produtos com estoque baixo nesta categoria"""
+        return self.products.filter(stock__lte=models.F('min_stock')).exclude(stock=0).count()
+
+    def get_out_of_stock_count(self) -> int:
+        """Retorna o número de produtos sem estoque nesta categoria"""
+        return self.products.filter(stock=0).count()
+
+    def get_normal_stock_count(self) -> int:
+        """Retorna o número de produtos com estoque normal nesta categoria"""
+        return self.products.filter(stock__gt=models.F('min_stock')).count()
+
     class Meta:
         verbose_name = 'Categoria'
         verbose_name_plural = 'Categorias'

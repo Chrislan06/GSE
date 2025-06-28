@@ -29,12 +29,53 @@ def product_list(request) -> Any:
         HttpResponse: Template com lista de produtos
     """
     try:
+        # Buscar produtos com filtros
+        search = request.GET.get('search', '')
+        category_id = request.GET.get('category', '')
+        stock_status = request.GET.get('stock_status', '')
+        
         products = ProductService.get_all_products()
-        return render(request, 'produtos/product_list.html', {'products': products})
+        
+        # Aplicar filtros
+        if search:
+            products = products.filter(name__icontains=search)
+        
+        if category_id:
+            products = products.filter(category_id=category_id)
+        
+        if stock_status:
+            if stock_status == 'low':
+                products = [p for p in products if p.low_stock and p.stock > 0]
+            elif stock_status == 'out':
+                products = [p for p in products if p.stock == 0]
+            elif stock_status == 'normal':
+                products = [p for p in products if not p.low_stock and p.stock > 0]
+        
+        # Buscar categorias para o filtro
+        categories = Category.objects.all()
+        
+        # Calcular estatísticas
+        low_stock_count = len([p for p in Product.objects.all() if p.low_stock and p.stock > 0])
+        out_of_stock_count = len([p for p in Product.objects.all() if p.stock == 0])
+        
+        context = {
+            'products': products,
+            'categories': categories,
+            'low_stock_count': low_stock_count,
+            'out_of_stock_count': out_of_stock_count
+        }
+        
+        return render(request, 'produtos/product_list.html', context)
+        
     except Exception as e:
         logger.error(f"Erro ao listar produtos: {e}")
         messages.error(request, "Erro ao carregar lista de produtos.")
-        return render(request, 'produtos/product_list.html', {'products': []})
+        return render(request, 'produtos/product_list.html', {
+            'products': [],
+            'categories': [],
+            'low_stock_count': 0,
+            'out_of_stock_count': 0
+        })
 
 
 @login_required
@@ -65,7 +106,7 @@ def product_create(request) -> Any:
                 
                 if product:
                     messages.success(request, f"Produto '{product.name}' criado com sucesso!")
-                    return redirect('lista_produtos')
+                    return redirect('produtos:lista_produtos')
                 else:
                     messages.error(request, "Erro ao criar produto.")
                     
@@ -95,26 +136,24 @@ def product_update(request, pk: int) -> Any:
     product = ProductService.get_product_by_id(pk)
     if not product:
         messages.error(request, "Produto não encontrado.")
-        return redirect('lista_produtos')
+        return redirect('produtos:lista_produtos')
     
     if request.method == 'POST':
         form = ProductForm(request.POST, instance=product)
         if form.is_valid():
             try:
-                # Usar o serviço para atualizar o produto
                 success = ProductService.update_product(
                     product_id=pk,
                     name=form.cleaned_data['name'],
-                    description=form.cleaned_data['description'],
+                    description=form.cleaned_data.get('description', ''),
                     price=form.cleaned_data['price'],
-                    stock=form.cleaned_data['stock'],
-                    min_stock=form.cleaned_data.get('min_stock', 0),
-                    category=form.cleaned_data.get('category')
+                    min_stock=form.cleaned_data['min_stock'],
+                    category_id=form.cleaned_data.get('category')
                 )
                 
                 if success:
                     messages.success(request, f"Produto '{product.name}' atualizado com sucesso!")
-                    return redirect('lista_produtos')
+                    return redirect('produtos:lista_produtos')
                 else:
                     messages.error(request, "Erro ao atualizar produto.")
                     
@@ -144,17 +183,19 @@ def product_delete(request, pk: int) -> Any:
     product = ProductService.get_product_by_id(pk)
     if not product:
         messages.error(request, "Produto não encontrado.")
-        return redirect('lista_produtos')
+        return redirect('produtos:lista_produtos')
     
     if request.method == 'POST':
         try:
             success = ProductService.delete_product(pk)
             if success:
                 messages.success(request, f"Produto '{product.name}' removido com sucesso!")
-                return redirect('lista_produtos')
+                return redirect('produtos:lista_produtos')
             else:
                 messages.error(request, "Erro ao remover produto.")
                 
+        except ValidationError as e:
+            messages.error(request, str(e))
         except Exception as e:
             logger.error(f"Erro ao remover produto {pk}: {e}")
             messages.error(request, "Erro interno ao remover produto.")
@@ -177,7 +218,7 @@ def product_detail(request, pk: int) -> Any:
     product = ProductService.get_product_by_id(pk)
     if not product:
         messages.error(request, "Produto não encontrado.")
-        return redirect('lista_produtos')
+        return redirect('produtos:lista_produtos')
     
     # Buscar movimentações de estoque
     stock_movements = StockService.get_stock_movements(pk)
@@ -206,12 +247,37 @@ def category_list(request) -> Any:
         HttpResponse: Template com lista de categorias
     """
     try:
+        # Buscar categorias com filtros
+        search = request.GET.get('search', '')
         categories = CategoryService.get_all_categories()
-        return render(request, 'produtos/category_list.html', {'categories': categories})
+        
+        # Aplicar filtro de busca
+        if search:
+            categories = categories.filter(name__icontains=search)
+        
+        # Calcular estatísticas
+        total_products = Product.objects.count()
+        total_low_stock = len([p for p in Product.objects.all() if p.low_stock and p.stock > 0])
+        total_out_of_stock = len([p for p in Product.objects.all() if p.stock == 0])
+        
+        context = {
+            'categories': categories,
+            'total_products': total_products,
+            'total_low_stock': total_low_stock,
+            'total_out_of_stock': total_out_of_stock
+        }
+        
+        return render(request, 'produtos/category_list.html', context)
+        
     except Exception as e:
         logger.error(f"Erro ao listar categorias: {e}")
         messages.error(request, "Erro ao carregar lista de categorias.")
-        return render(request, 'produtos/category_list.html', {'categories': []})
+        return render(request, 'produtos/category_list.html', {
+            'categories': [],
+            'total_products': 0,
+            'total_low_stock': 0,
+            'total_out_of_stock': 0
+        })
 
 
 @login_required
@@ -237,7 +303,7 @@ def category_create(request) -> Any:
                 
                 if category:
                     messages.success(request, f"Categoria '{category.name}' criada com sucesso!")
-                    return redirect('lista_categorias')
+                    return redirect('produtos:lista_categorias')
                 else:
                     messages.error(request, "Erro ao criar categoria.")
                     
@@ -267,7 +333,7 @@ def category_update(request, pk: int) -> Any:
     category = CategoryService.get_category_by_id(pk)
     if not category:
         messages.error(request, "Categoria não encontrada.")
-        return redirect('lista_categorias')
+        return redirect('produtos:lista_categorias')
     
     if request.method == 'POST':
         form = CategoryForm(request.POST, instance=category)
@@ -281,7 +347,7 @@ def category_update(request, pk: int) -> Any:
                 
                 if success:
                     messages.success(request, f"Categoria '{category.name}' atualizada com sucesso!")
-                    return redirect('lista_categorias')
+                    return redirect('produtos:lista_categorias')
                 else:
                     messages.error(request, "Erro ao atualizar categoria.")
                     
@@ -311,14 +377,14 @@ def category_delete(request, pk: int) -> Any:
     category = CategoryService.get_category_by_id(pk)
     if not category:
         messages.error(request, "Categoria não encontrada.")
-        return redirect('lista_categorias')
+        return redirect('produtos:lista_categorias')
     
     if request.method == 'POST':
         try:
             success = CategoryService.delete_category(pk)
             if success:
                 messages.success(request, f"Categoria '{category.name}' removida com sucesso!")
-                return redirect('lista_categorias')
+                return redirect('produtos:lista_categorias')
             else:
                 messages.error(request, "Erro ao remover categoria.")
                 
@@ -329,6 +395,42 @@ def category_delete(request, pk: int) -> Any:
             messages.error(request, "Erro interno ao remover categoria.")
     
     return render(request, 'produtos/category_confirm_delete.html', {'category': category})
+
+
+@login_required
+def category_detail(request, pk: int) -> Any:
+    """
+    Exibe detalhes de uma categoria
+    
+    Args:
+        request: Requisição HTTP
+        pk: ID da categoria
+        
+    Returns:
+        HttpResponse: Template com detalhes da categoria
+    """
+    category = CategoryService.get_category_by_id(pk)
+    if not category:
+        messages.error(request, "Categoria não encontrada.")
+        return redirect('produtos:lista_categorias')
+    
+    # Buscar produtos da categoria
+    products = category.products.all()
+    low_stock_products = [p for p in products if p.low_stock and p.stock > 0]
+    out_of_stock_products = [p for p in products if p.stock == 0]
+    normal_stock_products = [p for p in products if not p.low_stock and p.stock > 0]
+    
+    context = {
+        'category': category,
+        'low_stock_products': low_stock_products,
+        'out_of_stock_products': out_of_stock_products,
+        'normal_stock_products': normal_stock_products,
+        'low_stock_count': len(low_stock_products),
+        'out_of_stock_count': len(out_of_stock_products),
+        'normal_stock_count': len(normal_stock_products)
+    }
+    
+    return render(request, 'produtos/category_detail.html', context)
 
 
 # ============================================================================
@@ -350,7 +452,7 @@ def stock_movement(request, pk: int) -> Any:
     product = ProductService.get_product_by_id(pk)
     if not product:
         messages.error(request, "Produto não encontrado.")
-        return redirect('lista_produtos')
+        return redirect('produtos:lista_produtos')
     
     if request.method == 'POST':
         form = StockMovementForm(request.POST)
@@ -369,7 +471,7 @@ def stock_movement(request, pk: int) -> Any:
                 
                 if success:
                     messages.success(request, f"Movimentação de estoque realizada com sucesso!")
-                    return redirect('detalhe_produto', pk=pk)
+                    return redirect('produtos:detalhe_produto', pk=pk)
                 else:
                     messages.error(request, "Erro ao realizar movimentação de estoque.")
                     
@@ -381,9 +483,13 @@ def stock_movement(request, pk: int) -> Any:
     else:
         form = StockMovementForm()
     
+    # Buscar movimentações recentes
+    recent_movements = StockService.get_stock_movements(pk)[:5]
+    
     context = {
         'product': product,
-        'form': form
+        'form': form,
+        'recent_movements': recent_movements
     }
     
     return render(request, 'produtos/stock_movement.html', context)
@@ -408,9 +514,15 @@ def reports(request) -> Any:
         dashboard_data = ReportService.get_dashboard_data()
         stock_report = ReportService.get_stock_report()
         
+        # Buscar produtos para alertas
+        low_stock_products = ProductService.get_low_stock_products()
+        out_of_stock_products = [p for p in Product.objects.all() if p.stock == 0]
+        
         context = {
             **dashboard_data,
-            'stock_report': stock_report
+            'stock_report': stock_report,
+            'low_stock_products': low_stock_products,
+            'out_of_stock_products': out_of_stock_products
         }
         
         return render(request, 'produtos/reports.html', context)
@@ -418,7 +530,19 @@ def reports(request) -> Any:
     except Exception as e:
         logger.error(f"Erro ao gerar relatórios: {e}")
         messages.error(request, "Erro ao carregar relatórios.")
-        return render(request, 'produtos/reports.html', {})
+        return render(request, 'produtos/reports.html', {
+            'total_products': 0,
+            'total_categories': 0,
+            'low_stock_count': 0,
+            'out_of_stock_count': 0,
+            'stock_report': {
+                'normal_stock': [],
+                'low_stock': [],
+                'out_of_stock': []
+            },
+            'low_stock_products': [],
+            'out_of_stock_products': []
+        })
 
 
 @login_required
