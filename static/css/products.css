@@ -1,0 +1,491 @@
+/* ============================================================================
+   ESTILOS ESPECÍFICOS PARA PRODUTOS
+   ============================================================================ */
+
+/* Tabela de Produtos */
+.table-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.data-table thead {
+    background: #f8f9fa;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.data-table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.data-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: top;
+}
+
+.data-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.data-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.data-table tbody tr.low-stock {
+    background-color: #fffbf0;
+    border-left: 4px solid #ffc107;
+}
+
+.data-table tbody tr.out-of-stock {
+    background-color: #fff5f5;
+    border-left: 4px solid #dc3545;
+}
+
+.data-table tbody tr.low-stock:hover {
+    background-color: #fff3cd;
+}
+
+.data-table tbody tr.out-of-stock:hover {
+    background-color: #f8d7da;
+}
+
+/* Células específicas */
+.data-table .stock-amount {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.data-table .stock-amount.low {
+    color: #ffc107;
+}
+
+.data-table .stock-amount.zero {
+    color: #dc3545;
+}
+
+.data-table .actions {
+    white-space: nowrap;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.25rem;
+    justify-content: flex-start;
+}
+
+.action-buttons .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    min-width: auto;
+}
+
+/* Texto secundário */
+.text-muted {
+    color: #6c757d;
+    font-size: 0.85rem;
+}
+
+/* Lista de Produtos */
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.product-card {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+}
+
+.product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.product-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.product-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.product-info {
+    margin-bottom: 1.5rem;
+}
+
+.product-description {
+    color: #666;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+}
+
+.product-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.meta-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.meta-label {
+    font-weight: 500;
+    color: #666;
+}
+
+.meta-value {
+    color: #333;
+}
+
+.meta-value.stock-low {
+    color: #ffc107;
+    font-weight: bold;
+}
+
+.meta-value.stock-zero {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.product-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+/* Detalhes do Produto */
+.product-summary {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.product-summary h3 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+    font-size: 1.5rem;
+}
+
+.product-description {
+    color: #666;
+    margin: 0;
+}
+
+.stock-status {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.current-stock, .min-stock {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stock-label {
+    font-weight: 500;
+    color: #666;
+}
+
+.stock-amount {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.stock-amount.low {
+    color: #ffc107;
+}
+
+.stock-amount.zero {
+    color: #dc3545;
+}
+
+/* Movimentação de Estoque */
+.stock-movement-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.movement-form-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.movement-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.operation-preview {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.preview-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.preview-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: white;
+    border-radius: 4px;
+}
+
+.recent-movements {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.movements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.movement-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+.movement-icon i {
+    font-size: 1.5rem;
+}
+
+.movement-details {
+    flex: 1;
+}
+
+.movement-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.movement-type {
+    font-weight: 500;
+    color: #333;
+}
+
+.movement-date {
+    font-size: 0.875rem;
+    color: #666;
+}
+
+.movement-info {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+}
+
+.movement-quantity {
+    font-weight: 500;
+    color: #007bff;
+}
+
+.movement-reason {
+    color: #666;
+}
+
+/* Alertas de Estoque */
+.alerts-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.alerts-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.summary-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-left: 4px solid;
+}
+
+.summary-card.urgent {
+    border-left-color: #dc3545;
+}
+
+.summary-card.warning {
+    border-left-color: #ffc107;
+}
+
+.summary-card.info {
+    border-left-color: #17a2b8;
+}
+
+.summary-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.summary-card.urgent .summary-icon {
+    background: #dc3545;
+}
+
+.summary-card.warning .summary-icon {
+    background: #ffc107;
+}
+
+.summary-card.info .summary-icon {
+    background: #17a2b8;
+}
+
+.summary-content h3 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.summary-content p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.alert-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.alert-section h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.alert-description {
+    margin-bottom: 1.5rem;
+    color: #666;
+}
+
+.product-card.urgent {
+    border-left: 4px solid #dc3545;
+    background: #fff5f5;
+}
+
+.product-card.warning {
+    border-left: 4px solid #ffc107;
+    background: #fffbf0;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .table-container {
+        overflow-x: auto;
+    }
+    
+    .data-table {
+        min-width: 800px;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .products-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .product-summary {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .stock-status {
+        align-items: flex-start;
+    }
+    
+    .product-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .product-actions {
+        flex-direction: column;
+    }
+    
+    .alerts-summary {
+        grid-template-columns: 1fr;
+    }
+} 
