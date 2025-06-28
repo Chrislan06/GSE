@@ -1,0 +1,345 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }} - Detalhes - GSE{% endblock %}
+
+{% block header %}Detalhes do Produto{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-actions">
+        <a href="{% url 'produtos:movimentacao_estoque' product.id %}" class="btn btn-warning">
+            <i class="fas fa-exchange-alt"></i> Movimentar Estoque
+        </a>
+        <a href="{% url 'produtos:editar_produto' product.id %}" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Editar Produto
+        </a>
+        <a href="{% url 'produtos:lista_produtos' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<div class="product-detail-container">
+    <!-- Informações do Produto -->
+    <div class="product-info">
+        <div class="product-header">
+            <h2>{{ product.name }}</h2>
+            <div class="product-status">
+                {% if product.stock == 0 %}
+                    <span class="badge badge-danger">
+                        <i class="fas fa-times-circle"></i> Sem Estoque
+                    </span>
+                {% elif product.low_stock %}
+                    <span class="badge badge-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Estoque Baixo
+                    </span>
+                {% else %}
+                    <span class="badge badge-success">
+                        <i class="fas fa-check-circle"></i> Estoque Normal
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="product-description">
+            <p>{{ product.description }}</p>
+        </div>
+        
+        <div class="product-meta">
+            <div class="meta-item">
+                <strong>Categoria:</strong>
+                {% if product.category %}
+                    <span class="badge badge-secondary">{{ product.category.name }}</span>
+                {% else %}
+                    <span class="text-muted">Sem categoria</span>
+                {% endif %}
+            </div>
+            <div class="meta-item">
+                <strong>Preço:</strong>
+                <span class="price">R$ {{ product.price|floatformat:2 }}</span>
+            </div>
+            <div class="meta-item">
+                <strong>Criado em:</strong>
+                <span>{{ product.created_at|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="meta-item">
+                <strong>Última atualização:</strong>
+                <span>{{ product.updated_at|date:"d/m/Y H:i" }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Informações de Estoque -->
+    <div class="stock-info">
+        <h3><i class="fas fa-boxes"></i> Informações de Estoque</h3>
+        
+        <div class="stock-cards">
+            <div class="stock-card">
+                <div class="stock-icon">
+                    <i class="fas fa-box"></i>
+                </div>
+                <div class="stock-content">
+                    <h4>Estoque Atual</h4>
+                    <span class="stock-amount {% if product.low_stock %}low{% elif product.stock == 0 %}zero{% endif %}">
+                        {{ product.stock }}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="stock-card">
+                <div class="stock-icon warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stock-content">
+                    <h4>Estoque Mínimo</h4>
+                    <span class="stock-amount">{{ product.min_stock }}</span>
+                </div>
+            </div>
+            
+            <div class="stock-card">
+                <div class="stock-icon info">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stock-content">
+                    <h4>Status</h4>
+                    <span class="stock-status">{{ product.stock_status }}</span>
+                </div>
+            </div>
+        </div>
+        
+        {% if product.low_stock %}
+        <div class="stock-alert">
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Atenção!</strong> Este produto está com estoque baixo.
+                <br>
+                <small>Estoque atual: {{ product.stock }} | Mínimo: {{ product.min_stock }}</small>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if product.stock == 0 %}
+        <div class="stock-alert">
+            <div class="alert alert-danger">
+                <i class="fas fa-times-circle"></i>
+                <strong>Urgente!</strong> Este produto está sem estoque.
+                <br>
+                <small>É necessário repor o estoque imediatamente.</small>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Histórico de Movimentações -->
+    <div class="movements-history">
+        <h3><i class="fas fa-history"></i> Histórico de Movimentações</h3>
+        
+        {% if stock_movements %}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Data/Hora</th>
+                        <th>Tipo</th>
+                        <th>Quantidade</th>
+                        <th>Estoque Anterior</th>
+                        <th>Novo Estoque</th>
+                        <th>Motivo</th>
+                        <th>Responsável</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for movement in stock_movements %}
+                    <tr>
+                        <td>{{ movement.created_at|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            {% if movement.movement_type == 'IN' %}
+                                <span class="badge badge-success">
+                                    <i class="fas fa-plus"></i> Entrada
+                                </span>
+                            {% elif movement.movement_type == 'OUT' %}
+                                <span class="badge badge-danger">
+                                    <i class="fas fa-minus"></i> Saída
+                                </span>
+                            {% else %}
+                                <span class="badge badge-info">
+                                    <i class="fas fa-edit"></i> Ajuste
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>{{ movement.quantity }}</td>
+                        <td>{{ movement.previous_stock }}</td>
+                        <td>{{ movement.new_stock }}</td>
+                        <td>{{ movement.reason|default:"-" }}</td>
+                        <td>
+                            {% if movement.created_by %}
+                                {{ movement.created_by.username }}
+                            {% else %}
+                                <span class="text-muted">Sistema</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-history"></i>
+            <h4>Nenhuma movimentação registrada</h4>
+            <p>Este produto ainda não teve movimentações de estoque.</p>
+            <a href="{% url 'produtos:movimentacao_estoque' product.id %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Primeira Movimentação
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.product-detail-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.product-info {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.product-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.product-description {
+    margin-bottom: 1.5rem;
+    color: #666;
+}
+
+.product-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.stock-info {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stock-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stock-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #f9f9f9;
+}
+
+.stock-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #007bff;
+    color: white;
+}
+
+.stock-icon.warning {
+    background: #ffc107;
+}
+
+.stock-icon.info {
+    background: #17a2b8;
+}
+
+.stock-content h4 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.stock-amount {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.stock-amount.low {
+    color: #ffc107;
+}
+
+.stock-amount.zero {
+    color: #dc3545;
+}
+
+.movements-history {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stock-alert {
+    margin-top: 1rem;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.alert-warning {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+}
+
+.alert-danger {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #666;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #ccc;
+}
+</style>
+{% endblock %} 

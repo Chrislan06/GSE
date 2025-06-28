@@ -4,8 +4,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Sistema de Produtos{% endblock %}</title>
+    <title>{% block title %}GSE - Sistema de Gerenciamento de Estoque{% endblock %}</title>
+    
+    <!-- CSS Principal -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    
+    <!-- CSS Modularizado -->
+    <link rel="stylesheet" href="{% static 'css/components.css' %}">
+    <link rel="stylesheet" href="{% static 'css/products.css' %}">
+    <link rel="stylesheet" href="{% static 'css/categories.css' %}">
+    <link rel="stylesheet" href="{% static 'css/reports.css' %}">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- CSS Adicional específico da página -->
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
     <div class="container">
@@ -16,26 +30,86 @@
                 </div>
                 <div class="user-info">
                     <h3>{{ request.user.username }}</h3>
+                    <small>{{ request.user.email|default:"Usuário" }}</small>
                 </div>
             </div>
             <nav class="menu">
-                <a href="{% url 'relatorios' %}" class="menu-item">Relatórios</a>
-                <a href="{% url 'lista_produtos' %}" class="menu-item">Produtos</a>
-                <a href="{% url 'lista_categorias' %}" class="menu-item">Categorias</a>
-                <form method="post" action="{% url 'logout' %}">
-                    {% csrf_token %}
-                    <button type="submit" class="menu-item">Logout</button>
-                </form>
+                <div class="menu-section">
+                    <h4><i class="fas fa-tachometer-alt"></i> Dashboard</h4>
+                    <a href="{% url 'produtos:relatorios' %}" class="menu-item">
+                        <i class="fas fa-chart-bar"></i> Relatórios
+                    </a>
+                    <a href="{% url 'produtos:alertas_estoque' %}" class="menu-item">
+                        <i class="fas fa-exclamation-triangle"></i> Alertas de Estoque
+                    </a>
+                </div>
+                
+                <div class="menu-section">
+                    <h4><i class="fas fa-boxes"></i> Produtos</h4>
+                    <a href="{% url 'produtos:lista_produtos' %}" class="menu-item">
+                        <i class="fas fa-list"></i> Listar Produtos
+                    </a>
+                    <a href="{% url 'produtos:criar_produto' %}" class="menu-item">
+                        <i class="fas fa-plus"></i> Novo Produto
+                    </a>
+                </div>
+                
+                <div class="menu-section">
+                    <h4><i class="fas fa-tags"></i> Categorias</h4>
+                    <a href="{% url 'produtos:lista_categorias' %}" class="menu-item">
+                        <i class="fas fa-list"></i> Listar Categorias
+                    </a>
+                    <a href="{% url 'produtos:criar_categoria' %}" class="menu-item">
+                        <i class="fas fa-plus"></i> Nova Categoria
+                    </a>
+                </div>
+                
+                <div class="menu-section">
+                    <h4><i class="fas fa-user"></i> Usuário</h4>
+                    <form method="post" action="{% url 'logout' %}" style="margin: 0;">
+                        {% csrf_token %}
+                        <button type="submit" class="menu-item logout-btn">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </form>
+                </div>
             </nav>
         </div>
+        
         <div class="content">
             <header>
-                <h1>{% block header %}{% endblock %}</h1>
+                <div class="header-content">
+                    <h1>{% block header %}{% endblock %}</h1>
+                    {% if messages %}
+                        <div class="messages">
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }}">
+                                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                                    {{ message }}
+                                    <button type="button" class="close-btn" onclick="this.parentElement.remove()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
             </header>
+            
             <main>
                 {% block content %}{% endblock %}
             </main>
         </div>
     </div>
+    
+    <!-- JavaScript Principal -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    
+    <!-- JavaScript Modularizado -->
+    <script src="{% static 'js/common.js' %}"></script>
+    <script src="{% static 'js/products.js' %}"></script>
+    
+    <!-- JavaScript Adicional específico da página -->
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

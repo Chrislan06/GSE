@@ -1,0 +1,460 @@
+{% extends 'base.html' %}
+
+{% block title %}Alertas de Estoque - GSE{% endblock %}
+
+{% block header %}Alertas de Estoque{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-actions">
+        <a href="{% url 'produtos:lista_produtos' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar aos Produtos
+        </a>
+        <button onclick="location.reload()" class="btn btn-primary">
+            <i class="fas fa-sync-alt"></i> Atualizar
+        </button>
+    </div>
+</div>
+
+<div class="alerts-container">
+    <!-- Resumo dos Alertas -->
+    <div class="alerts-summary">
+        <div class="summary-card urgent">
+            <div class="summary-icon">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="summary-content">
+                <h3>{{ out_of_stock_products|length }}</h3>
+                <p>Produtos Sem Estoque</p>
+            </div>
+        </div>
+        
+        <div class="summary-card warning">
+            <div class="summary-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="summary-content">
+                <h3>{{ low_stock_products|length }}</h3>
+                <p>Produtos com Estoque Baixo</p>
+            </div>
+        </div>
+        
+        <div class="summary-card info">
+            <div class="summary-icon">
+                <i class="fas fa-info-circle"></i>
+            </div>
+            <div class="summary-content">
+                <h3>{{ low_stock_products|length|add:out_of_stock_products|length }}</h3>
+                <p>Total de Alertas</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Produtos Sem Estoque -->
+    {% if out_of_stock_products %}
+    <div class="alert-section">
+        <h2><i class="fas fa-times-circle text-danger"></i> Produtos Sem Estoque</h2>
+        <div class="alert-description">
+            <p>Estes produtos estão completamente sem estoque e precisam de reposição urgente.</p>
+        </div>
+        
+        <div class="products-grid">
+            {% for product in out_of_stock_products %}
+            <div class="product-card urgent">
+                <div class="product-header">
+                    <h3>{{ product.name }}</h3>
+                    <span class="badge badge-danger">
+                        <i class="fas fa-times-circle"></i> Sem Estoque
+                    </span>
+                </div>
+                
+                <div class="product-info">
+                    <p class="description">{{ product.description|truncatechars:100 }}</p>
+                    
+                    <div class="product-meta">
+                        <div class="meta-item">
+                            <span class="label">Categoria:</span>
+                            <span class="value">
+                                {% if product.category %}
+                                    {{ product.category.name }}
+                                {% else %}
+                                    Sem categoria
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="meta-item">
+                            <span class="label">Preço:</span>
+                            <span class="value">R$ {{ product.price|floatformat:2 }}</span>
+                        </div>
+                        
+                        <div class="meta-item">
+                            <span class="label">Estoque Mínimo:</span>
+                            <span class="value">{{ product.min_stock }}</span>
+                        </div>
+                        
+                        <div class="meta-item">
+                            <span class="label">Última Atualização:</span>
+                            <span class="value">{{ product.updated_at|date:"d/m/Y H:i" }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="product-actions">
+                    <a href="{% url 'produtos:movimentacao_estoque' product.id %}" 
+                       class="btn btn-warning btn-small">
+                        <i class="fas fa-plus"></i> Repor Estoque
+                    </a>
+                    <a href="{% url 'produtos:detalhe_produto' product.id %}" 
+                       class="btn btn-info btn-small">
+                        <i class="fas fa-eye"></i> Ver Detalhes
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Produtos com Estoque Baixo -->
+    {% if low_stock_products %}
+    <div class="alert-section">
+        <h2><i class="fas fa-exclamation-triangle text-warning"></i> Produtos com Estoque Baixo</h2>
+        <div class="alert-description">
+            <p>Estes produtos estão com estoque abaixo do mínimo recomendado.</p>
+        </div>
+        
+        <div class="products-grid">
+            {% for product in low_stock_products %}
+            <div class="product-card warning">
+                <div class="product-header">
+                    <h3>{{ product.name }}</h3>
+                    <span class="badge badge-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Estoque Baixo
+                    </span>
+                </div>
+                
+                <div class="product-info">
+                    <p class="description">{{ product.description|truncatechars:100 }}</p>
+                    
+                    <div class="product-meta">
+                        <div class="meta-item">
+                            <span class="label">Categoria:</span>
+                            <span class="value">
+                                {% if product.category %}
+                                    {{ product.category.name }}
+                                {% else %}
+                                    Sem categoria
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="meta-item">
+                            <span class="label">Preço:</span>
+                            <span class="value">R$ {{ product.price|floatformat:2 }}</span>
+                        </div>
+                        
+                        <div class="meta-item">
+                            <span class="label">Estoque Atual:</span>
+                            <span class="value stock-low">{{ product.stock }}</span>
+                        </div>
+                        
+                        <div class="meta-item">
+                            <span class="label">Estoque Mínimo:</span>
+                            <span class="value">{{ product.min_stock }}</span>
+                        </div>
+                        
+                        <div class="meta-item">
+                            <span class="label">Última Atualização:</span>
+                            <span class="value">{{ product.updated_at|date:"d/m/Y H:i" }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="product-actions">
+                    <a href="{% url 'produtos:movimentacao_estoque' product.id %}" 
+                       class="btn btn-warning btn-small">
+                        <i class="fas fa-plus"></i> Adicionar Estoque
+                    </a>
+                    <a href="{% url 'produtos:detalhe_produto' product.id %}" 
+                       class="btn btn-info btn-small">
+                        <i class="fas fa-eye"></i> Ver Detalhes
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Estado Vazio -->
+    {% if not out_of_stock_products and not low_stock_products %}
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h3>Nenhum Alerta de Estoque</h3>
+        <p>Todos os produtos estão com estoque adequado!</p>
+        <a href="{% url 'produtos:lista_produtos' %}" class="btn btn-primary">
+            <i class="fas fa-boxes"></i> Ver Todos os Produtos
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.alerts-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.alerts-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.summary-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-left: 4px solid;
+}
+
+.summary-card.urgent {
+    border-left-color: #dc3545;
+}
+
+.summary-card.warning {
+    border-left-color: #ffc107;
+}
+
+.summary-card.info {
+    border-left-color: #17a2b8;
+}
+
+.summary-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.summary-card.urgent .summary-icon {
+    background: #dc3545;
+}
+
+.summary-card.warning .summary-icon {
+    background: #ffc107;
+}
+
+.summary-card.info .summary-icon {
+    background: #17a2b8;
+}
+
+.summary-content h3 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.summary-content p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.alert-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.alert-section h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.alert-description {
+    margin-bottom: 1.5rem;
+    color: #666;
+}
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.product-card {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.product-card.urgent {
+    border-left: 4px solid #dc3545;
+    background: #fff5f5;
+}
+
+.product-card.warning {
+    border-left: 4px solid #ffc107;
+    background: #fffbf0;
+}
+
+.product-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.product-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.2rem;
+}
+
+.product-info {
+    margin-bottom: 1.5rem;
+}
+
+.description {
+    color: #666;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+}
+
+.product-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.meta-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.label {
+    font-weight: 500;
+    color: #666;
+}
+
+.value {
+    color: #333;
+}
+
+.value.stock-low {
+    color: #ffc107;
+    font-weight: bold;
+}
+
+.product-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: #28a745;
+    margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.empty-state p {
+    color: #666;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .alerts-summary {
+        grid-template-columns: 1fr;
+    }
+    
+    .products-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .product-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .product-actions {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh a cada 30 segundos
+setInterval(function() {
+    location.reload();
+}, 30000);
+
+// Notificação de alertas
+document.addEventListener('DOMContentLoaded', function() {
+    // Obter contadores dos elementos HTML
+    var urgentElement = document.querySelector('.summary-card.urgent h3');
+    var warningElement = document.querySelector('.summary-card.warning h3');
+    
+    if (urgentElement && warningElement) {
+        var urgentCount = parseInt(urgentElement.textContent) || 0;
+        var warningCount = parseInt(warningElement.textContent) || 0;
+        
+        if (urgentCount > 0 || warningCount > 0) {
+            // Mostrar notificação se o navegador suportar
+            if ('Notification' in window && Notification.permission === 'granted') {
+                var message = 'Você tem ' + urgentCount + ' produtos sem estoque e ' + warningCount + ' com estoque baixo.';
+                new Notification('Alertas de Estoque', {
+                    body: message,
+                    icon: '/static/img/alert-icon.png'
+                });
+            }
+        }
+    }
+});
+</script>
+{% endblock %} 

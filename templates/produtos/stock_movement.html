@@ -1,0 +1,499 @@
+{% extends 'base.html' %}
+
+{% block title %}Movimentação de Estoque - {{ product.name }} - GSE{% endblock %}
+
+{% block header %}Movimentação de Estoque{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-actions">
+        <a href="{% url 'produtos:detalhe_produto' product.id %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar ao Produto
+        </a>
+    </div>
+</div>
+
+<div class="stock-movement-container">
+    <!-- Informações do Produto -->
+    <div class="product-summary">
+        <div class="product-info">
+            <h3>{{ product.name }}</h3>
+            <p class="product-description">{{ product.description|truncatechars:100 }}</p>
+        </div>
+        
+        <div class="stock-status">
+            <div class="current-stock">
+                <span class="label">Estoque Atual:</span>
+                <span class="amount {% if product.low_stock %}low{% elif product.stock == 0 %}zero{% endif %}">
+                    {{ product.stock }}
+                </span>
+            </div>
+            <div class="min-stock">
+                <span class="label">Estoque Mínimo:</span>
+                <span class="amount">{{ product.min_stock }}</span>
+            </div>
+            <div class="stock-indicator">
+                {% if product.stock == 0 %}
+                    <span class="badge badge-danger">
+                        <i class="fas fa-times-circle"></i> Sem Estoque
+                    </span>
+                {% elif product.low_stock %}
+                    <span class="badge badge-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Estoque Baixo
+                    </span>
+                {% else %}
+                    <span class="badge badge-success">
+                        <i class="fas fa-check-circle"></i> Estoque Normal
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Formulário de Movimentação -->
+    <div class="movement-form-container">
+        <h3><i class="fas fa-exchange-alt"></i> Nova Movimentação</h3>
+        
+        <form method="post" class="movement-form">
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.movement_type.id_for_label }}">
+                        <i class="fas fa-tag"></i> Tipo de Movimento
+                    </label>
+                    {{ form.movement_type }}
+                    {% if form.movement_type.errors %}
+                        <div class="error-message">
+                            {% for error in form.movement_type.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.quantity.id_for_label }}">
+                        <i class="fas fa-hashtag"></i> Quantidade
+                    </label>
+                    {{ form.quantity }}
+                    {% if form.quantity.errors %}
+                        <div class="error-message">
+                            {% for error in form.quantity.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.reason.id_for_label }}">
+                    <i class="fas fa-comment"></i> Motivo (opcional)
+                </label>
+                {{ form.reason }}
+                {% if form.reason.errors %}
+                    <div class="error-message">
+                        {% for error in form.reason.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Preview da operação -->
+            <div class="operation-preview" id="operation-preview" style="display: none;">
+                <h4><i class="fas fa-eye"></i> Preview da Operação</h4>
+                <div class="preview-content">
+                    <div class="preview-item">
+                        <span class="label">Estoque Atual:</span>
+                        <span class="value">{{ product.stock }}</span>
+                    </div>
+                    <div class="preview-item">
+                        <span class="label">Operação:</span>
+                        <span class="value" id="preview-operation"></span>
+                    </div>
+                    <div class="preview-item">
+                        <span class="label">Novo Estoque:</span>
+                        <span class="value" id="preview-new-stock"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Confirmar Movimentação
+                </button>
+                <a href="{% url 'produtos:detalhe_produto' product.id %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Histórico Recente -->
+    <div class="recent-movements">
+        <h3><i class="fas fa-history"></i> Movimentações Recentes</h3>
+        
+        {% if recent_movements %}
+        <div class="movements-list">
+            {% for movement in recent_movements|slice:":5" %}
+            <div class="movement-item">
+                <div class="movement-icon">
+                    {% if movement.movement_type == 'IN' %}
+                        <i class="fas fa-plus-circle text-success"></i>
+                    {% elif movement.movement_type == 'OUT' %}
+                        <i class="fas fa-minus-circle text-danger"></i>
+                    {% else %}
+                        <i class="fas fa-edit-circle text-info"></i>
+                    {% endif %}
+                </div>
+                <div class="movement-details">
+                    <div class="movement-header">
+                        <span class="movement-type">
+                            {% if movement.movement_type == 'IN' %}
+                                Entrada de Estoque
+                            {% elif movement.movement_type == 'OUT' %}
+                                Saída de Estoque
+                            {% else %}
+                                Ajuste de Estoque
+                            {% endif %}
+                        </span>
+                        <span class="movement-date">{{ movement.created_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    <div class="movement-info">
+                        <span class="quantity">{{ movement.quantity }} unidades</span>
+                        {% if movement.reason %}
+                            <span class="reason">{{ movement.reason }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-history"></i>
+            <p>Nenhuma movimentação registrada ainda.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.stock-movement-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.product-summary {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.product-info h3 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+}
+
+.product-description {
+    color: #666;
+    margin: 0;
+}
+
+.stock-status {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.current-stock, .min-stock {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.label {
+    font-weight: 500;
+    color: #666;
+}
+
+.amount {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.amount.low {
+    color: #ffc107;
+}
+
+.amount.zero {
+    color: #dc3545;
+}
+
+.movement-form-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.movement-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-weight: 500;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 0.875rem;
+}
+
+.operation-preview {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.preview-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.preview-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: white;
+    border-radius: 4px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.recent-movements {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.movements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.movement-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
+
+.movement-icon i {
+    font-size: 1.5rem;
+}
+
+.movement-details {
+    flex: 1;
+}
+
+.movement-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+}
+
+.movement-type {
+    font-weight: 500;
+    color: #333;
+}
+
+.movement-date {
+    font-size: 0.875rem;
+    color: #666;
+}
+
+.movement-info {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+}
+
+.quantity {
+    font-weight: 500;
+    color: #007bff;
+}
+
+.reason {
+    color: #666;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+}
+
+.empty-state i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: #ccc;
+}
+
+@media (max-width: 768px) {
+    .product-summary {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .stock-status {
+        align-items: flex-start;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var movementType = document.getElementById('{{ form.movement_type.id_for_label }}');
+    var quantity = document.getElementById('{{ form.quantity.id_for_label }}');
+    var preview = document.getElementById('operation-preview');
+    var previewOperation = document.getElementById('preview-operation');
+    var previewNewStock = document.getElementById('preview-new-stock');
+    
+    // Obter estoque atual do elemento HTML
+    var stockElement = document.querySelector('.current-stock .amount');
+    var currentStock = stockElement ? parseInt(stockElement.textContent.trim()) || 0 : 0;
+    
+    function updatePreview() {
+        var type = movementType ? movementType.value : '';
+        var qty = parseInt(quantity ? quantity.value : 0) || 0;
+        
+        if (type && qty > 0) {
+            var newStock = currentStock;
+            var operation = '';
+            
+            switch(type) {
+                case 'IN':
+                    newStock = currentStock + qty;
+                    operation = '+' + qty + ' (Entrada)';
+                    break;
+                case 'OUT':
+                    newStock = currentStock - qty;
+                    operation = '-' + qty + ' (Saída)';
+                    break;
+                case 'ADJUSTMENT':
+                    newStock = qty;
+                    operation = '=' + qty + ' (Ajuste)';
+                    break;
+            }
+            
+            if (previewOperation) {
+                previewOperation.textContent = operation;
+            }
+            if (previewNewStock) {
+                previewNewStock.textContent = newStock;
+            }
+            if (preview) {
+                preview.style.display = 'block';
+            }
+        } else {
+            if (preview) {
+                preview.style.display = 'none';
+            }
+        }
+    }
+    
+    if (movementType) {
+        movementType.addEventListener('change', updatePreview);
+    }
+    
+    if (quantity) {
+        quantity.addEventListener('input', updatePreview);
+        
+        // Validação em tempo real
+        quantity.addEventListener('input', function() {
+            var qty = parseInt(this.value) || 0;
+            var type = movementType ? movementType.value : '';
+            
+            if (type === 'OUT' && qty > currentStock) {
+                this.setCustomValidity('Estoque insuficiente. Estoque atual: ' + currentStock);
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 

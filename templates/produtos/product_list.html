@@ -1,12 +1,56 @@
 {% extends 'base.html' %}
 
-{% block title %}Lista de Produtos{% endblock %}
+{% block title %}Lista de Produtos - GSE{% endblock %}
 
 {% block header %}Lista de Produtos{% endblock %}
 
 {% block content %}
-<div class="actions">
-    <a href="{% url 'novo_produto' %}" class="btn btn-primary">Novo Produto</a>
+<div class="page-header">
+    <div class="header-actions">
+        <a href="{% url 'produtos:criar_produto' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Novo Produto
+        </a>
+        <a href="{% url 'produtos:alertas_estoque' %}" class="btn btn-warning">
+            <i class="fas fa-exclamation-triangle"></i> Alertas de Estoque
+        </a>
+    </div>
+    
+    <!-- Filtros de busca -->
+    <div class="filters">
+        <form method="get" class="filter-form">
+            <div class="filter-group">
+                <input type="text" name="search" id="search-input" placeholder="Buscar produtos..." 
+                       value="{{ request.GET.search }}" class="form-control">
+            </div>
+            <div class="filter-group">
+                <select name="category" class="form-control filter-select">
+                    <option value="">Todas as categorias</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" 
+                                {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <select name="stock_status" class="form-control filter-select">
+                    <option value="">Todos os status</option>
+                    <option value="normal" {% if request.GET.stock_status == 'normal' %}selected{% endif %}>Estoque Normal</option>
+                    <option value="low" {% if request.GET.stock_status == 'low' %}selected{% endif %}>Estoque Baixo</option>
+                    <option value="out" {% if request.GET.stock_status == 'out' %}selected{% endif %}>Sem Estoque</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-secondary">
+                <i class="fas fa-search"></i> Filtrar
+            </button>
+        </form>
+    </div>
+    
+    <!-- Contador de resultados -->
+    <div class="results-info">
+        <span id="results-counter">{{ products.count }} produto(s) encontrado(s)</span>
+    </div>
 </div>
 
 <div class="table-container">
@@ -14,30 +58,127 @@
         <thead>
             <tr>
                 <th>Nome</th>
-                <th>Descrição</th>
+                <th>Categoria</th>
                 <th>Preço</th>
-                <th>Estoque</th>
+                <th>Estoque Atual</th>
+                <th>Estoque Mínimo</th>
+                <th>Status</th>
+                <th>Última Atualização</th>
                 <th>Ações</th>
             </tr>
         </thead>
         <tbody>
             {% for product in products %}
-            <tr>
-                <td>{{ product.name }}</td>
-                <td>{{ product.description|truncatechars:50 }}</td>
-                <td>R$ {{ product.price }}</td>
-                <td>{{ product.stock }}</td>
+            <tr class="product-row {% if product.low_stock %}low-stock{% elif product.stock == 0 %}out-of-stock{% endif %}">
+                <td>
+                    <strong>{{ product.name }}</strong>
+                    {% if product.description %}
+                        <br><small class="text-muted">{{ product.description|truncatechars:50 }}</small>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if product.category %}
+                        <span class="badge badge-secondary">{{ product.category.name }}</span>
+                    {% else %}
+                        <span class="text-muted">Sem categoria</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <strong>R$ {{ product.price|floatformat:2 }}</strong>
+                </td>
+                <td>
+                    <span class="stock-amount {% if product.low_stock %}low{% elif product.stock == 0 %}zero{% endif %}">
+                        {{ product.stock }}
+                    </span>
+                </td>
+                <td>{{ product.min_stock }}</td>
+                <td>
+                    {% if product.stock == 0 %}
+                        <span class="badge badge-danger">
+                            <i class="fas fa-times-circle"></i> Sem Estoque
+                        </span>
+                    {% elif product.low_stock %}
+                        <span class="badge badge-warning">
+                            <i class="fas fa-exclamation-triangle"></i> Estoque Baixo
+                        </span>
+                    {% else %}
+                        <span class="badge badge-success">
+                            <i class="fas fa-check-circle"></i> Normal
+                        </span>
+                    {% endif %}
+                </td>
+                <td>
+                    <small>{{ product.updated_at|date:"d/m/Y H:i" }}</small>
+                </td>
                 <td class="actions">
-                    <a href="{% url 'editar_produto' product.id %}" class="btn btn-small">Editar</a>
-                    <a href="{% url 'excluir_produto' product.id %}" class="btn btn-small btn-danger">Excluir</a>
+                    <div class="action-buttons">
+                        <a href="{% url 'produtos:detalhe_produto' product.id %}" 
+                           class="btn btn-small btn-info" data-tooltip="Ver detalhes">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{% url 'produtos:movimentacao_estoque' product.id %}" 
+                           class="btn btn-small btn-warning" data-tooltip="Movimentar estoque">
+                            <i class="fas fa-exchange-alt"></i>
+                        </a>
+                        <a href="{% url 'produtos:editar_produto' product.id %}" 
+                           class="btn btn-small btn-primary" data-tooltip="Editar produto">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'produtos:excluir_produto' product.id %}" 
+                           class="btn btn-small btn-danger confirm-delete" 
+                           data-tooltip="Excluir produto"
+                           data-confirm-message="Tem certeza que deseja excluir o produto '{{ product.name }}'?">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="5">Nenhum produto cadastrado.</td>
+                <td colspan="8" class="text-center">
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-box-open"></i>
+                        </div>
+                        <h3>Nenhum produto encontrado</h3>
+                        <p>Comece criando seu primeiro produto.</p>
+                        <a href="{% url 'produtos:criar_produto' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Criar Produto
+                        </a>
+                    </div>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
+<!-- Estatísticas rápidas -->
+{% if products %}
+<div class="stats-overview">
+    <div class="stat-card products">
+        <div class="icon">
+            <i class="fas fa-boxes"></i>
+        </div>
+        <div class="number">{{ products.count }}</div>
+        <div class="label">Total de Produtos</div>
+    </div>
+    
+    <div class="stat-card low-stock">
+        <div class="icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="number">{{ low_stock_count|default:0 }}</div>
+        <div class="label">Estoque Baixo</div>
+    </div>
+    
+    <div class="stat-card out-stock">
+        <div class="icon">
+            <i class="fas fa-times-circle"></i>
+        </div>
+        <div class="number">{{ out_of_stock_count|default:0 }}</div>
+        <div class="label">Sem Estoque</div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

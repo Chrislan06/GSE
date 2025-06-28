@@ -1,12 +1,29 @@
 {% extends 'base.html' %}
 
-{% block title %}Lista de Categorias{% endblock %}
+{% block title %}Lista de Categorias - GSE{% endblock %}
 
 {% block header %}Lista de Categorias{% endblock %}
 
 {% block content %}
-<div class="actions">
-    <a href="{% url 'nova_categoria' %}" class="btn btn-primary">Nova Categoria</a>
+<div class="page-header">
+    <div class="header-actions">
+        <a href="{% url 'produtos:criar_categoria' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nova Categoria
+        </a>
+    </div>
+    
+    <!-- Filtros de busca -->
+    <div class="filters">
+        <form method="get" class="filter-form">
+            <div class="filter-group">
+                <input type="text" name="search" placeholder="Buscar categorias..." 
+                       value="{{ request.GET.search }}" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-secondary">
+                <i class="fas fa-search"></i> Filtrar
+            </button>
+        </form>
+    </div>
 </div>
 
 <div class="table-container">
@@ -15,27 +32,127 @@
             <tr>
                 <th>Nome</th>
                 <th>Descrição</th>
-                <th>Produtos</th>
+                <th>Total de Produtos</th>
+                <th>Produtos com Estoque Baixo</th>
+                <th>Produtos Sem Estoque</th>
+                <th>Criada em</th>
                 <th>Ações</th>
             </tr>
         </thead>
         <tbody>
             {% for category in categories %}
             <tr>
-                <td>{{ category.name }}</td>
-                <td>{{ category.description|truncatechars:50 }}</td>
-                <td>{{ category.products.count }}</td>
+                <td>
+                    <strong>{{ category.name }}</strong>
+                </td>
+                <td>
+                    {% if category.description %}
+                        {{ category.description|truncatechars:50 }}
+                    {% else %}
+                        <span class="text-muted">Sem descrição</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="badge badge-secondary">{{ category.products.count }}</span>
+                </td>
+                <td>
+                    {% with low_stock_count=category.get_low_stock_count %}
+                        {% if low_stock_count > 0 %}
+                            <span class="badge badge-warning">{{ low_stock_count }}</span>
+                        {% else %}
+                            <span class="text-muted">0</span>
+                        {% endif %}
+                    {% endwith %}
+                </td>
+                <td>
+                    {% with out_of_stock_count=category.get_out_of_stock_count %}
+                        {% if out_of_stock_count > 0 %}
+                            <span class="badge badge-danger">{{ out_of_stock_count }}</span>
+                        {% else %}
+                            <span class="text-muted">0</span>
+                        {% endif %}
+                    {% endwith %}
+                </td>
+                <td>
+                    <small>{{ category.created_at|date:"d/m/Y H:i" }}</small>
+                </td>
                 <td class="actions">
-                    <a href="{% url 'editar_categoria' category.id %}" class="btn btn-small">Editar</a>
-                    <a href="{% url 'excluir_categoria' category.id %}" class="btn btn-small btn-danger">Excluir</a>
+                    <div class="action-buttons">
+                        <a href="{% url 'produtos:detalhe_categoria' category.id %}" 
+                           class="btn btn-small btn-info" title="Ver detalhes">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{% url 'produtos:editar_categoria' category.id %}" 
+                           class="btn btn-small btn-primary" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'produtos:excluir_categoria' category.id %}" 
+                           class="btn btn-small btn-danger" title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="4">Nenhuma categoria cadastrada.</td>
+                <td colspan="7" class="text-center">
+                    <div class="empty-state">
+                        <i class="fas fa-folder-open"></i>
+                        <h3>Nenhuma categoria encontrada</h3>
+                        <p>Comece criando sua primeira categoria.</p>
+                        <a href="{% url 'produtos:criar_categoria' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Criar Categoria
+                        </a>
+                    </div>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
+<!-- Estatísticas rápidas -->
+{% if categories %}
+<div class="stats-container">
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-tags"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ categories.count }}</h3>
+            <p>Total de Categorias</p>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-boxes"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ total_products|default:0 }}</h3>
+            <p>Total de Produtos</p>
+        </div>
+    </div>
+    
+    <div class="stat-card warning">
+        <div class="stat-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ total_low_stock|default:0 }}</h3>
+            <p>Produtos com Estoque Baixo</p>
+        </div>
+    </div>
+    
+    <div class="stat-card danger">
+        <div class="stat-icon">
+            <i class="fas fa-times-circle"></i>
+        </div>
+        <div class="stat-content">
+            <h3>{{ total_out_of_stock|default:0 }}</h3>
+            <p>Produtos Sem Estoque</p>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

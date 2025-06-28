@@ -1,19 +1,596 @@
 {% extends 'base.html' %}
 
-{% block title %}Relatórios{% endblock %}
+{% block title %}Relatórios - GSE{% endblock %}
 
-{% block header %}Relatórios{% endblock %}
+{% block header %}Dashboard e Relatórios{% endblock %}
 
 {% block content %}
-<div class="reports-container">
-    <h2>Relatórios</h2>
-    <p>Esta é a página de relatórios. Aqui serão exibidos os relatórios do sistema.</p>
-    
-    <div class="report-card">
-        <h3>Total de Produtos</h3>
-        <p class="report-value">{{ products.count }}</p>
+<div class="dashboard-container">
+    <!-- Cards de Estatísticas -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-boxes"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ total_products|default:0 }}</h3>
+                <p>Total de Produtos</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-tags"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ total_categories|default:0 }}</h3>
+                <p>Total de Categorias</p>
+            </div>
+        </div>
+        
+        <div class="stat-card warning">
+            <div class="stat-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ low_stock_count|default:0 }}</h3>
+                <p>Estoque Baixo</p>
+            </div>
+        </div>
+        
+        <div class="stat-card danger">
+            <div class="stat-icon">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ out_of_stock_count|default:0 }}</h3>
+                <p>Sem Estoque</p>
+            </div>
+        </div>
     </div>
-    
-    <!-- Outros relatórios podem ser adicionados aqui -->
+
+    <!-- Relatório de Estoque -->
+    <div class="report-section">
+        <h2><i class="fas fa-chart-bar"></i> Relatório de Estoque</h2>
+        
+        <div class="stock-report-grid">
+            <!-- Produtos com Estoque Normal -->
+            <div class="report-card success">
+                <div class="report-header">
+                    <h3><i class="fas fa-check-circle"></i> Estoque Normal</h3>
+                    <span class="count">{{ stock_report.normal_stock|length }}</span>
+                </div>
+                
+                {% if stock_report.normal_stock %}
+                <div class="report-content">
+                    <div class="products-list">
+                        {% for product in stock_report.normal_stock|slice:":5" %}
+                        <div class="product-item">
+                            <span class="product-name">{{ product.name }}</span>
+                            <span class="product-stock">{{ product.stock }}</span>
+                        </div>
+                        {% endfor %}
+                        {% if stock_report.normal_stock|length > 5 %}
+                        <div class="more-items">
+                            <small>+{{ stock_report.normal_stock|length|add:"-5" }} mais produtos</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <p>Nenhum produto com estoque normal.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Produtos com Estoque Baixo -->
+            <div class="report-card warning">
+                <div class="report-header">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Estoque Baixo</h3>
+                    <span class="count">{{ stock_report.low_stock|length }}</span>
+                </div>
+                
+                {% if stock_report.low_stock %}
+                <div class="report-content">
+                    <div class="products-list">
+                        {% for product in stock_report.low_stock|slice:":5" %}
+                        <div class="product-item">
+                            <span class="product-name">{{ product.name }}</span>
+                            <span class="product-stock low">{{ product.stock }}</span>
+                        </div>
+                        {% endfor %}
+                        {% if stock_report.low_stock|length > 5 %}
+                        <div class="more-items">
+                            <small>+{{ stock_report.low_stock|length|add:"-5" }} mais produtos</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <p>Nenhum produto com estoque baixo.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Produtos Sem Estoque -->
+            <div class="report-card danger">
+                <div class="report-header">
+                    <h3><i class="fas fa-times-circle"></i> Sem Estoque</h3>
+                    <span class="count">{{ stock_report.out_of_stock|length }}</span>
+                </div>
+                
+                {% if stock_report.out_of_stock %}
+                <div class="report-content">
+                    <div class="products-list">
+                        {% for product in stock_report.out_of_stock|slice:":5" %}
+                        <div class="product-item">
+                            <span class="product-name">{{ product.name }}</span>
+                            <span class="product-stock zero">{{ product.stock }}</span>
+                        </div>
+                        {% endfor %}
+                        {% if stock_report.out_of_stock|length > 5 %}
+                        <div class="more-items">
+                            <small>+{{ stock_report.out_of_stock|length|add:"-5" }} mais produtos</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <p>Nenhum produto sem estoque.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertas Urgentes -->
+    {% if low_stock_products or out_of_stock_products %}
+    <div class="report-section">
+        <h2><i class="fas fa-exclamation-triangle"></i> Alertas Urgentes</h2>
+        
+        <div class="alerts-grid">
+            {% if out_of_stock_products %}
+            <div class="alert-card urgent">
+                <div class="alert-header">
+                    <h3><i class="fas fa-times-circle"></i> Produtos Sem Estoque</h3>
+                    <span class="alert-count">{{ out_of_stock_products|length }}</span>
+                </div>
+                <div class="alert-content">
+                    <p>Estes produtos precisam de reposição imediata:</p>
+                    <ul>
+                        {% for product in out_of_stock_products|slice:":3" %}
+                        <li>{{ product.name }}</li>
+                        {% endfor %}
+                        {% if out_of_stock_products|length > 3 %}
+                        <li><em>... e mais {{ out_of_stock_products|length|add:"-3" }} produtos</em></li>
+                        {% endif %}
+                    </ul>
+                    <a href="{% url 'produtos:alertas_estoque' %}" class="btn btn-danger btn-small">
+                        <i class="fas fa-eye"></i> Ver Todos
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if low_stock_products %}
+            <div class="alert-card warning">
+                <div class="alert-header">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Produtos com Estoque Baixo</h3>
+                    <span class="alert-count">{{ low_stock_products|length }}</span>
+                </div>
+                <div class="alert-content">
+                    <p>Estes produtos estão com estoque abaixo do mínimo:</p>
+                    <ul>
+                        {% for product in low_stock_products|slice:":3" %}
+                        <li>{{ product.name }} ({{ product.stock }}/{{ product.min_stock }})</li>
+                        {% endfor %}
+                        {% if low_stock_products|length > 3 %}
+                        <li><em>... e mais {{ low_stock_products|length|add:"-3" }} produtos</em></li>
+                        {% endif %}
+                    </ul>
+                    <a href="{% url 'produtos:alertas_estoque' %}" class="btn btn-warning btn-small">
+                        <i class="fas fa-eye"></i> Ver Todos
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Ações Rápidas -->
+    <div class="report-section">
+        <h2><i class="fas fa-bolt"></i> Ações Rápidas</h2>
+        
+        <div class="quick-actions">
+            <a href="{% url 'produtos:criar_produto' %}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-plus"></i>
+                </div>
+                <div class="action-content">
+                    <h3>Novo Produto</h3>
+                    <p>Cadastrar um novo produto no sistema</p>
+                </div>
+            </a>
+            
+            <a href="{% url 'produtos:criar_categoria' %}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-tag"></i>
+                </div>
+                <div class="action-content">
+                    <h3>Nova Categoria</h3>
+                    <p>Criar uma nova categoria de produtos</p>
+                </div>
+            </a>
+            
+            <a href="{% url 'produtos:alertas_estoque' %}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="action-content">
+                    <h3>Ver Alertas</h3>
+                    <p>Visualizar todos os alertas de estoque</p>
+                </div>
+            </a>
+            
+            <a href="{% url 'produtos:lista_produtos' %}" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-list"></i>
+                </div>
+                <div class="action-content">
+                    <h3>Listar Produtos</h3>
+                    <p>Ver todos os produtos cadastrados</p>
+                </div>
+            </a>
+        </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.dashboard-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.stat-card.warning {
+    border-left: 4px solid #ffc107;
+}
+
+.stat-card.danger {
+    border-left: 4px solid #dc3545;
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.stat-card.warning .stat-icon {
+    background: #ffc107;
+}
+
+.stat-card.danger .stat-icon {
+    background: #dc3545;
+}
+
+.stat-content h3 {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.stat-content p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.report-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.report-section h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    color: #333;
+}
+
+.stock-report-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.report-card {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.5rem;
+    background: #f8f9fa;
+}
+
+.report-card.success {
+    border-left: 4px solid #28a745;
+}
+
+.report-card.warning {
+    border-left: 4px solid #ffc107;
+}
+
+.report-card.danger {
+    border-left: 4px solid #dc3545;
+}
+
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.report-header h3 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #333;
+}
+
+.count {
+    background: #007bff;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: bold;
+}
+
+.report-card.success .count {
+    background: #28a745;
+}
+
+.report-card.warning .count {
+    background: #ffc107;
+    color: #333;
+}
+
+.report-card.danger .count {
+    background: #dc3545;
+}
+
+.products-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.product-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: white;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.product-stock {
+    font-weight: bold;
+    color: #007bff;
+}
+
+.product-stock.low {
+    color: #ffc107;
+}
+
+.product-stock.zero {
+    color: #dc3545;
+}
+
+.more-items {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+}
+
+.empty-state {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+}
+
+.alerts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.alert-card {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.5rem;
+    background: #f8f9fa;
+}
+
+.alert-card.urgent {
+    border-left: 4px solid #dc3545;
+    background: #fff5f5;
+}
+
+.alert-card.warning {
+    border-left: 4px solid #ffc107;
+    background: #fffbf0;
+}
+
+.alert-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.alert-header h3 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #333;
+}
+
+.alert-count {
+    background: #dc3545;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: bold;
+}
+
+.alert-card.warning .alert-count {
+    background: #ffc107;
+    color: #333;
+}
+
+.alert-content ul {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+.alert-content li {
+    margin-bottom: 0.5rem;
+    color: #666;
+}
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.action-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.action-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    text-decoration: none;
+    color: inherit;
+}
+
+.action-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.action-content h3 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.action-content p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stock-report-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .alerts-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .quick-actions {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh do dashboard a cada 60 segundos
+setInterval(function() {
+    location.reload();
+}, 60000);
+
+// Animações de entrada
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.stat-card, .report-card, .action-card');
+    
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
 {% endblock %}
