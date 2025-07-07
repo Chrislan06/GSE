@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -47,7 +48,6 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    "django.contrib.auth.middleware.LoginRequiredMiddleware",
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -135,3 +135,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'produtos:lista_produtos'
 LOGOUT_REDIRECT_URL = 'login'
+
+# AI Report Settings
+AI_API_KEY = config('AI_API_KEY', default='')
+AI_PROVIDER = config('AI_PROVIDER', default='openai')  # openai, anthropic
+AI_ENABLED = bool(AI_API_KEY)
+
+# Report Settings
+REPORT_MAX_SIZE = 10 * 1024 * 1024  # 10MB
+REPORT_CACHE_TIMEOUT = 3600  # 1 hora
