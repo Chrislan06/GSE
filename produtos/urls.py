@@ -23,8 +23,12 @@ urlpatterns = [
     
     # URLs de Relatórios
     path('relatorios/', views.reports, name='relatorios'),
+    path('relatorios/ia/', views.ai_report_generator, name='relatorios_ia'),
+    path('relatorios/ia/gerar/', views.generate_ai_report, name='gerar_relatorio_ia'),
+    path('relatorios/ia/preview/', views.preview_ai_insights, name='preview_insights_ia'),
     path('alertas-estoque/', views.low_stock_alert, name='alertas_estoque'),
     
     # URLs AJAX
     path('api/produto/<int:pk>/', views.get_product_data, name='api_produto'),
+    path('api/ai/status/', views.check_ai_status, name='check_ai_status'),
 ]

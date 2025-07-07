@@ -3,12 +3,15 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.core.exceptions import ValidationError
+from django.conf import settings
 from typing import Dict, Any
+from datetime import datetime
 import logging
 
 from .models import Product, Category, StockMovement
 from .forms import ProductForm, CategoryForm, StockMovementForm
 from .services import ProductService, CategoryService, StockService, ReportService
+from .ai_report_service import AIReportService
 
 logger = logging.getLogger(__name__)
 
@@ -612,5 +615,183 @@ def get_product_data(request, pk: int) -> JsonResponse:
     except Exception as e:
         logger.error(f"Erro ao buscar dados do produto {pk}: {e}")
         return JsonResponse({'error': 'Erro interno'}, status=500)
+
+
+# ============================================================================
+# VIEWS DE RELATÓRIOS COM IA
+# ============================================================================
+
+@login_required
+def ai_report_generator(request) -> Any:
+    """
+    Interface para geração de relatórios com IA
+    
+    Args:
+        request: Requisição HTTP
+        
+    Returns:
+        HttpResponse: Template de geração de relatórios
+    """
+    try:
+        ai_service = AIReportService()
+        
+        context = {
+            'available_formats': ai_service.get_available_formats(),
+            'ai_providers': ai_service.get_ai_providers(),
+            'ai_enabled': getattr(settings, 'AI_ENABLED', False)
+        }
+        
+        return render(request, 'produtos/ai_report_generator.html', context)
+        
+    except Exception as e:
+        logger.error(f"Erro ao carregar gerador de relatórios: {e}")
+        messages.error(request, "Erro ao carregar gerador de relatórios.")
+        return redirect('produtos:relatorios')
+
+
+@login_required
+def generate_ai_report(request) -> Any:
+    """
+    Gera relatório com IA
+    
+    Args:
+        request: Requisição HTTP
+        
+    Returns:
+        HttpResponse: Arquivo do relatório gerado
+    """
+    try:
+        if request.method != 'POST':
+            return JsonResponse({'error': 'Método não permitido'}, status=405)
+        
+        # Obter parâmetros
+        report_format = request.POST.get('format', 'pdf')
+        start_date_str = request.POST.get('start_date', '')
+        end_date_str = request.POST.get('end_date', '')
+        provider = request.POST.get('provider', 'openai')
+        
+        # Converter datas
+        start_date = None
+        end_date = None
+        
+        if start_date_str:
+            try:
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+            except ValueError:
+                return JsonResponse({'error': 'Data inicial inválida'}, status=400)
+        
+        if end_date_str:
+            try:
+                end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+            except ValueError:
+                return JsonResponse({'error': 'Data final inválida'}, status=400)
+        
+        # Validar formato
+        ai_service = AIReportService(provider=provider)
+        if report_format not in ai_service.get_available_formats():
+            return JsonResponse({'error': 'Formato não suportado'}, status=400)
+        
+        # Gerar relatório
+        response = ai_service.generate_comprehensive_report(
+            format=report_format,
+            start_date=start_date,
+            end_date=end_date
+        )
+        
+        messages.success(request, f"Relatório gerado com sucesso em formato {report_format.upper()}!")
+        return response
+        
+    except Exception as e:
+        logger.error(f"Erro ao gerar relatório com IA: {e}")
+        messages.error(request, "Erro ao gerar relatório.")
+        return JsonResponse({'error': 'Erro interno ao gerar relatório'}, status=500)
+
+
+@login_required
+def preview_ai_insights(request) -> JsonResponse:
+    """
+    Prévia dos insights gerados pela IA
+    
+    Args:
+        request: Requisição HTTP
+        
+    Returns:
+        JsonResponse: Insights em formato JSON
+    """
+    try:
+        if request.method != 'POST':
+            return JsonResponse({'error': 'Método não permitido'}, status=405)
+        
+        start_date_str = request.POST.get('start_date', '')
+        end_date_str = request.POST.get('end_date', '')
+        provider = request.POST.get('provider', 'openai')
+        
+        # Converter datas
+        start_date = None
+        end_date = None
+        
+        if start_date_str:
+            try:
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+            except ValueError:
+                return JsonResponse({'error': 'Data inicial inválida'}, status=400)
+        
+        if end_date_str:
+            try:
+                end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+            except ValueError:
+                return JsonResponse({'error': 'Data final inválida'}, status=400)
+        
+        # Gerar insights
+        ai_service = AIReportService(provider=provider)
+        ai_generator = ai_service.ai_generator
+        
+        data = ai_generator._prepare_stock_data(start_date, end_date)
+        insights = ai_generator.generate_ai_insights(data)
+        
+        return JsonResponse({
+            'insights': insights,
+            'summary': data['summary'],
+            'ai_enabled': bool(ai_generator.api_key)
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro ao gerar prévia de insights: {e}")
+        return JsonResponse({'error': 'Erro interno ao gerar insights'}, status=500)
+
+
+@login_required
+def check_ai_status(request) -> JsonResponse:
+    """
+    Verifica o status da API de IA
+    
+    Args:
+        request: Requisição HTTP
+        
+    Returns:
+        JsonResponse: Status da API
+    """
+    try:
+        provider = request.GET.get('provider', 'openai')
+        
+        if provider == 'openai':
+            ai_generator = AIReportGenerator(provider=provider)
+            status = ai_generator.check_openai_status()
+        else:
+            status = {
+                'status': 'not_implemented',
+                'message': f'Verificação de status não implementada para {provider}',
+                'solutions': ['Usar OpenAI ou verificar documentação da API']
+            }
+        
+        return JsonResponse(status)
+        
+    except Exception as e:
+        logger.error(f"Erro ao verificar status da IA: {e}")
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Erro ao verificar status: {str(e)}',
+            'solutions': ['Verificar configuração da API']
+        }, status=500)
 
 
