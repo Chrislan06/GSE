@@ -30,5 +30,5 @@ urlpatterns = [
     
     # URLs AJAX
     path('api/produto/<int:pk>/', views.get_product_data, name='api_produto'),
-    path('api/ai/status/', views.check_ai_status, name='check_ai_status'),
+
 ]

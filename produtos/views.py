@@ -760,38 +760,5 @@ def preview_ai_insights(request) -> JsonResponse:
         return JsonResponse({'error': 'Erro interno ao gerar insights'}, status=500)
 
 
-@login_required
-def check_ai_status(request) -> JsonResponse:
-    """
-    Verifica o status da API de IA
-    
-    Args:
-        request: Requisição HTTP
-        
-    Returns:
-        JsonResponse: Status da API
-    """
-    try:
-        provider = request.GET.get('provider', 'openai')
-        
-        if provider == 'openai':
-            ai_generator = AIReportGenerator(provider=provider)
-            status = ai_generator.check_openai_status()
-        else:
-            status = {
-                'status': 'not_implemented',
-                'message': f'Verificação de status não implementada para {provider}',
-                'solutions': ['Usar OpenAI ou verificar documentação da API']
-            }
-        
-        return JsonResponse(status)
-        
-    except Exception as e:
-        logger.error(f"Erro ao verificar status da IA: {e}")
-        return JsonResponse({
-            'status': 'error',
-            'message': f'Erro ao verificar status: {str(e)}',
-            'solutions': ['Verificar configuração da API']
-        }, status=500)
 
 
