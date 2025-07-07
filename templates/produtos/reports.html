@@ -6,6 +6,20 @@
 
 {% block content %}
 <div class="dashboard-container">
+    <!-- Botão para Gerador de Relatórios com IA -->
+    <div class="ai-report-section" style="margin-bottom: 30px; text-align: center;">
+        <div class="ai-report-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 15px; box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);">
+            <h2 style="margin: 0 0 15px 0; font-size: 2em;">
+                🤖 Gerador de Relatórios com IA
+            </h2>
+            <p style="margin: 0 0 25px 0; font-size: 1.1em; opacity: 0.9;">
+                Gere relatórios inteligentes e insights avançados sobre seu estoque
+            </p>
+            <a href="{% url 'produtos:relatorios_ia' %}" class="btn btn-light" style="background: white; color: #667eea; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; transition: all 0.3s ease;">
+                🚀 Gerar Relatório com IA
+            </a>
+        </div>
+    </div>
     <!-- Cards de Estatísticas -->
     <div class="stats-grid">
         <div class="stat-card">
