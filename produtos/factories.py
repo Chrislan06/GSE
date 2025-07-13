@@ -12,7 +12,7 @@ class ProductFactory:
     @staticmethod
     def create_product(
         name: str,
-        description: str,
+        description: Optional[str],
         price: float,
         stock: int = 0,
         min_stock: int = 0,
@@ -38,13 +38,13 @@ class ProductFactory:
         """
         try:
             # Validações básicas
-            if not name or not description or price <= 0:
+            if not name or price <= 0:
                 raise ValueError("Dados inválidos para criação do produto")
             
             # Criar o produto base
             product_data = {
                 'name': name,
-                'description': description,
+                'description': description or '',
                 'price': price,
                 'stock': stock,
                 'min_stock': min_stock,
