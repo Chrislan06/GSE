@@ -99,8 +99,6 @@ const ProductsModule = {
             
             switch (filterType) {
                 case 'category':
-                    // Para filtro de categoria, vamos deixar o backend fazer o filtro
-                    // e apenas atualizar a contagem
                     break;
                     
                 case 'stock_status':

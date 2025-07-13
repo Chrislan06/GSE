@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Excluir Categoria{% endblock %}
 
@@ -8,18 +9,38 @@
 <div class="confirm-delete">
     <h2>Tem certeza que deseja excluir a categoria "{{ category.name }}"?</h2>
     
-    {% if category.products.count > 0 %}
-    <div class="warning-message">
-        <p>Atenção: Esta categoria possui {{ category.products.count }} produto(s) associado(s). Excluir esta categoria também excluirá todos os produtos relacionados.</p>
-    </div>
-    {% endif %}
+    {% if products_info.products_count > 0 %}
     
     <form method="post">
         {% csrf_token %}
         <div class="form-actions">
-            <button type="submit" class="btn btn-danger">Sim, excluir</button>
-            <a href="{% url 'produtos:lista_categorias' %}" class="btn">Cancelar</a>
+            <button type="submit" name="force" value="true" class="btn btn-warning">
+                <i class="fas fa-exclamation-triangle"></i> Remover Categoria (deixar produtos sem categoria)
+            </button>
+            <a href="{% url 'produtos:lista_categorias' %}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancelar
+            </a>
         </div>
     </form>
+    
+    {% else %}
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Sim, excluir categoria
+            </button>
+            <a href="{% url 'produtos:lista_categorias' %}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancelar
+            </a>
+        </div>
+    </form>
+    
+    {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/category_confirm_delete.css' %}">
 {% endblock %}

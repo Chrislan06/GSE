@@ -1,0 +1,220 @@
+/* Low Stock Alert Styles */
+.alerts-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.alerts-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.summary-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-left: 4px solid;
+}
+
+.summary-card.urgent {
+    border-left-color: #dc3545;
+}
+
+.summary-card.warning {
+    border-left-color: #ffc107;
+}
+
+.summary-card.info {
+    border-left-color: #17a2b8;
+}
+
+.summary-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.summary-card.urgent .summary-icon {
+    background: #dc3545;
+}
+
+.summary-card.warning .summary-icon {
+    background: #ffc107;
+}
+
+.summary-card.info .summary-icon {
+    background: #17a2b8;
+}
+
+.summary-content h3 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333;
+}
+
+.summary-content p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.alert-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.alert-section h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.alert-description {
+    margin-bottom: 1.5rem;
+    color: #666;
+}
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.product-card {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.product-card.urgent {
+    border-left: 4px solid #dc3545;
+    background: #fff5f5;
+}
+
+.product-card.warning {
+    border-left: 4px solid #ffc107;
+    background: #fffbf0;
+}
+
+.product-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.product-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.2rem;
+}
+
+.product-info {
+    margin-bottom: 1.5rem;
+}
+
+.description {
+    color: #666;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+}
+
+.product-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.meta-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.label {
+    font-weight: 500;
+    color: #666;
+}
+
+.value {
+    color: #333;
+}
+
+.value.stock-low {
+    color: #ffc107;
+    font-weight: bold;
+}
+
+.product-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: #28a745;
+    margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.empty-state p {
+    color: #666;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .alerts-summary {
+        grid-template-columns: 1fr;
+    }
+    
+    .products-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .product-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .product-actions {
+        flex-direction: column;
+    }
+} 

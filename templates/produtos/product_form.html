@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}{% if form.instance.pk %}Editar{% else %}Novo{% endif %} Produto - GSE{% endblock %}
 
@@ -61,7 +62,7 @@
                 {% endfor %}
             </div>
             {% endif %}
-            <small class="form-help">Descrição detalhada do produto</small>
+                            <small class="form-help">Descrição detalhada do produto (opcional)</small>
         </div>
         
         <div class="form-row">
@@ -143,132 +144,9 @@
 {% endblock %}
 
 {% block extra_css %}
-<style>
-.form-container {
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.form-help {
-    color: #666;
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
-}
-
-.stock-preview {
-    background: #f8f9fa;
-    padding: 1.5rem;
-    border-radius: 8px;
-    border: 1px solid #e9ecef;
-    margin: 1.5rem 0;
-}
-
-.stock-preview h4 {
-    margin-bottom: 1rem;
-    color: #333;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.preview-content {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-}
-
-.preview-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem;
-    background: white;
-    border-radius: 4px;
-    border: 1px solid #e9ecef;
-}
-
-.preview-item .label {
-    font-weight: 500;
-    color: #666;
-}
-
-.preview-item .value {
-    font-weight: bold;
-    color: #333;
-}
-
-.preview-item .value.normal {
-    color: #28a745;
-}
-
-.preview-item .value.low {
-    color: #ffc107;
-}
-
-.preview-item .value.zero {
-    color: #dc3545;
-}
-</style>
+<link rel="stylesheet" href="{% static 'css/product_form.css' %}">
 {% endblock %}
 
 {% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const stockInput = document.getElementById('{{ form.stock.id_for_label }}');
-    const minStockInput = document.getElementById('{{ form.min_stock.id_for_label }}');
-    const preview = document.getElementById('stock-preview');
-    const previewCurrentStock = document.getElementById('preview-current-stock');
-    const previewMinStock = document.getElementById('preview-min-stock');
-    const previewStatus = document.getElementById('preview-status');
-    
-    function updatePreview() {
-        const stock = parseInt(stockInput.value) || 0;
-        const minStock = parseInt(minStockInput.value) || 0;
-        
-        if (stock > 0 || minStock > 0) {
-            previewCurrentStock.textContent = stock;
-            previewMinStock.textContent = minStock;
-            
-            let status = 'Normal';
-            let statusClass = 'normal';
-            
-            if (stock === 0) {
-                status = 'Sem Estoque';
-                statusClass = 'zero';
-            } else if (stock <= minStock) {
-                status = 'Estoque Baixo';
-                statusClass = 'low';
-            }
-            
-            previewStatus.textContent = status;
-            previewStatus.className = `value ${statusClass}`;
-            preview.style.display = 'block';
-        } else {
-            preview.style.display = 'none';
-        }
-    }
-    
-    stockInput.addEventListener('input', updatePreview);
-    minStockInput.addEventListener('input', updatePreview);
-    
-    // Validação em tempo real
-    stockInput.addEventListener('input', function() {
-        const stock = parseInt(this.value) || 0;
-        if (stock < 0) {
-            this.setCustomValidity('O estoque não pode ser negativo');
-        } else {
-            this.setCustomValidity('');
-        }
-    });
-    
-    minStockInput.addEventListener('input', function() {
-        const minStock = parseInt(this.value) || 0;
-        if (minStock < 0) {
-            this.setCustomValidity('O estoque mínimo não pode ser negativo');
-        } else {
-            this.setCustomValidity('');
-        }
-    });
-});
-</script>
+<script src="{% static 'js/product_form.js' %}"></script>
 {% endblock %}

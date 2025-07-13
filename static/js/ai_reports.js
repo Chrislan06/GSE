@@ -31,9 +31,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Selecionar PDF por padrão
+    // Selecionar XLSX por padrão
     if (formatCards.length > 0) {
-        formatCards[0].click();
+        // Encontrar o card XLSX e selecioná-lo
+        const xlsxCard = Array.from(formatCards).find(card => card.dataset.format === 'xlsx');
+        if (xlsxCard) {
+            xlsxCard.click();
+        } else {
+            // Fallback para o primeiro card se XLSX não for encontrado
+            formatCards[0].click();
+        }
     }
 
     // Prévia dos insights
