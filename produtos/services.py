@@ -51,7 +51,7 @@ class ProductService:
     @staticmethod
     def create_product(
         name: str,
-        description: str,
+        description: Optional[str],
         price: float,
         stock: int = 0,
         min_stock: int = 0,
@@ -115,9 +115,14 @@ class ProductService:
                 if not product:
                     return False
                 
+                logger.info(f"Atualizando produto {product_id} com campos: {kwargs}")
+                
                 for field, value in kwargs.items():
                     if hasattr(product, field):
+                        logger.info(f"Definindo campo {field} = {value} (tipo: {type(value)})")
                         setattr(product, field, value)
+                    else:
+                        logger.warning(f"Campo {field} não existe no modelo Product")
                 
                 product.full_clean()
                 product.save()
@@ -292,12 +297,13 @@ class CategoryService:
             return False
     
     @staticmethod
-    def delete_category(category_id: int) -> bool:
+    def delete_category(category_id: int, force: bool = False) -> bool:
         """
         Remove uma categoria
         
         Args:
             category_id: ID da categoria
+            force: Se True, remove a categoria mesmo com produtos associados (deixa produtos sem categoria)
             
         Returns:
             bool: True se removida com sucesso
@@ -309,8 +315,14 @@ class CategoryService:
                     return False
                 
                 # Verificar se há produtos associados
-                if category.products.exists():
-                    raise ValidationError("Não é possível remover uma categoria que possui produtos associados")
+                products_count = category.products.count()
+                if products_count > 0 and not force:
+                    raise ValidationError(f"Não é possível remover uma categoria que possui {products_count} produto(s) associado(s). Use 'force=True' para remover mesmo assim.")
+                
+                # Se force=True, remover categoria dos produtos antes de deletar
+                if force and products_count > 0:
+                    category.products.update(category=None)
+                    logger.info(f"Removida categoria de {products_count} produto(s) antes de deletar a categoria")
                 
                 category_name = category.name
                 category.delete()
@@ -321,6 +333,32 @@ class CategoryService:
         except Exception as e:
             logger.error(f"Erro ao remover categoria {category_id}: {e}")
             return False
+    
+    @staticmethod
+    def get_category_products_info(category_id: int) -> Dict[str, Any]:
+        """
+        Retorna informações sobre produtos associados a uma categoria
+        
+        Args:
+            category_id: ID da categoria
+            
+        Returns:
+            Dict[str, Any]: Informações sobre os produtos
+        """
+        try:
+            category = CategoryService.get_category_by_id(category_id)
+            if not category:
+                return {'products_count': 0, 'products': []}
+            
+            products = list(category.products.all())
+            return {
+                'products_count': len(products),
+                'products': products
+            }
+            
+        except Exception as e:
+            logger.error(f"Erro ao buscar produtos da categoria {category_id}: {e}")
+            return {'products_count': 0, 'products': []}
 
 
 class StockService:

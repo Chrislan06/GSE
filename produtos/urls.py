@@ -28,7 +28,7 @@ urlpatterns = [
     path('relatorios/ia/preview/', views.preview_ai_insights, name='preview_insights_ia'),
     path('alertas-estoque/', views.low_stock_alert, name='alertas_estoque'),
     
-    # URLs AJAX
+    
     path('api/produto/<int:pk>/', views.get_product_data, name='api_produto'),
 
 ]

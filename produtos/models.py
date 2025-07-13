@@ -71,11 +71,11 @@ class StockMovement(models.Model):
 
 class Product(models.Model):
     name = models.CharField(max_length=100, verbose_name='Nome')
-    description = models.TextField(verbose_name='Descrição')
+    description = models.TextField(verbose_name='Descrição', blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Preço')
     stock = models.IntegerField(verbose_name='Estoque', default=0)
     min_stock = models.IntegerField(verbose_name='Estoque Mínimo', default=0)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, verbose_name='Categoria', related_name='products', null=True)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, verbose_name='Categoria', related_name='products', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Atualizado em')
     
@@ -87,7 +87,7 @@ class Product(models.Model):
 
     def clean(self):
         """Validação de regras de negócio para produto"""
-        if not self.name.strip():
+        if not self.name or not self.name.strip():
             raise ValidationError('O nome do produto não pode estar vazio.')
         
         if self.price <= 0:

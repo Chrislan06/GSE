@@ -150,8 +150,9 @@ def product_update(request, pk: int) -> Any:
                     name=form.cleaned_data['name'],
                     description=form.cleaned_data.get('description', ''),
                     price=form.cleaned_data['price'],
+                    stock=form.cleaned_data['stock'],
                     min_stock=form.cleaned_data['min_stock'],
-                    category_id=form.cleaned_data.get('category')
+                    category=form.cleaned_data.get('category')
                 )
                 
                 if success:
@@ -382,11 +383,20 @@ def category_delete(request, pk: int) -> Any:
         messages.error(request, "Categoria não encontrada.")
         return redirect('produtos:lista_categorias')
     
+    # Verificar se há produtos associados
+    products_info = CategoryService.get_category_products_info(pk)
+    
     if request.method == 'POST':
         try:
-            success = CategoryService.delete_category(pk)
+            # Verificar se o usuário confirmou a remoção forçada
+            force = request.POST.get('force') == 'true'
+            
+            success = CategoryService.delete_category(pk, force=force)
             if success:
-                messages.success(request, f"Categoria '{category.name}' removida com sucesso!")
+                if force and products_info['products_count'] > 0:
+                    messages.success(request, f"Categoria '{category.name}' removida com sucesso! {products_info['products_count']} produto(s) ficaram sem categoria.")
+                else:
+                    messages.success(request, f"Categoria '{category.name}' removida com sucesso!")
                 return redirect('produtos:lista_categorias')
             else:
                 messages.error(request, "Erro ao remover categoria.")
@@ -397,7 +407,12 @@ def category_delete(request, pk: int) -> Any:
             logger.error(f"Erro ao remover categoria {pk}: {e}")
             messages.error(request, "Erro interno ao remover categoria.")
     
-    return render(request, 'produtos/category_confirm_delete.html', {'category': category})
+    context = {
+        'category': category,
+        'products_info': products_info
+    }
+    
+    return render(request, 'produtos/category_confirm_delete.html', context)
 
 
 @login_required
@@ -665,7 +680,7 @@ def generate_ai_report(request) -> Any:
             return JsonResponse({'error': 'Método não permitido'}, status=405)
         
         # Obter parâmetros
-        report_format = request.POST.get('format', 'pdf')
+        report_format = request.POST.get('format', 'xlsx')
         start_date_str = request.POST.get('start_date', '')
         end_date_str = request.POST.get('end_date', '')
         provider = request.POST.get('provider', 'openai')
