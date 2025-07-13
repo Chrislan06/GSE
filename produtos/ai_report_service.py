@@ -685,7 +685,7 @@ class AIReportService:
         self.exporter = ReportExporter()
     
     def generate_comprehensive_report(self, 
-                                    format: str = "pdf",
+                                    format: str = "xlsx",
                                     start_date: Optional[datetime] = None,
                                     end_date: Optional[datetime] = None,
                                     filename: str = None) -> HttpResponse:
@@ -693,7 +693,7 @@ class AIReportService:
         Gera relatório completo com IA
         
         Args:
-            format: Formato do relatório (pdf, excel, csv)
+            format: Formato do relatório (pdf, xlsx, csv)
             start_date: Data inicial para filtro
             end_date: Data final para filtro
             filename: Nome do arquivo
@@ -716,7 +716,7 @@ class AIReportService:
             # Exportar no formato solicitado
             if format.lower() == "pdf":
                 return self.exporter.export_to_pdf(data, insights, filename)
-            elif format.lower() in ["excel", "xlsx"]:
+            elif format.lower() in ["xlsx", "excel"]:
                 return self.exporter.export_to_excel(data, insights, filename)
             elif format.lower() == "csv":
                 return self.exporter.export_to_csv(data, filename)
@@ -729,7 +729,7 @@ class AIReportService:
     
     def get_available_formats(self) -> List[str]:
         """Retorna formatos disponíveis"""
-        return ["pdf", "excel", "csv"]
+        return ["pdf", "xlsx", "csv"]
     
     def get_ai_providers(self) -> List[str]:
         """Retorna provedores de IA disponíveis"""
